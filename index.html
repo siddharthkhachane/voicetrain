@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accent Trainer</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    button { margin: 5px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🎙️ Accent Trainer</h1>
+
+  <label for="sentence">Enter a sentence:</label><br>
+  <input type="text" id="sentence" size="50" value="The quick brown fox jumps over the lazy dog"><br><br>
+
+  <button onclick="playSentence()">🔊 Play Native</button>
+  <button onclick="startRecording()">🎤 Start Recording</button>
+  <button onclick="stopRecording()">⏹️ Stop</button>
+
+  <p id="transcript">Transcript: <em>None yet</em></p>
+  <p id="score">Score: -</p>
+
+  <script>
+    // Play sentence with native voice
+    function playSentence() {
+      const sentence = document.getElementById("sentence").value;
+      const utterance = new SpeechSynthesisUtterance(sentence);
+      utterance.lang = 'en-US';
+      speechSynthesis.speak(utterance);
+    }
+
+    // Speech Recognition setup
+    let recognition;
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+    } else {
+      alert("Speech Recognition not supported in this browser.");
+    }
+
+    function startRecording() {
+      recognition.lang = 'en-US';
+      recognition.start();
+      document.getElementById("transcript").innerText = "Listening...";
+    }
+
+    recognition.onresult = function(event) {
+      const result = event.results[0][0].transcript;
+      const sentence = document.getElementById("sentence").value.toLowerCase();
+      const spoken = result.toLowerCase();
+      document.getElementById("transcript").innerText = "Transcript: " + spoken;
+
+      const score = computeScore(sentence, spoken);
+      document.getElementById("score").innerText = "Score: " + score + "%";
+    };
+
+    function stopRecording() {
+      recognition.stop();
+    }
+
+    // Simple similarity score
+    function computeScore(a, b) {
+      const awords = a.split(/\s+/);
+      const bwords = b.split(/\s+/);
+      let match = 0;
+      awords.forEach((word, i) => {
+        if (bwords[i] && bwords[i] === word) match++;
+      });
+      return Math.round((match / awords.length) * 100);
+    }
+  </script>
+</body>
+</html>
